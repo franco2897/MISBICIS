@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bike Setup Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 1rem;
+        }
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.2s ease;
+        }
+        .tab-button.active {
+            border-color: #f59e0b;
+            color: #1f2937;
+        }
+        .input-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: #4b5563;
+        }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 12px;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            transition: all 0.2s ease;
+        }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+        }
+        .bike-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .bike-card.selected {
+            border-color: #f59e0b;
+            background-color: #fffbeb;
+        }
+        .maintenance-item {
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .maintenance-item.due {
+            border: 2px solid #ef4444;
+            background-color: #fef2f2;
+        }
+        .maintenance-item.ok {
+            border: 2px solid #34d399;
+            background-color: #f0fdf4;
+        }
+        .progress-bar-container {
+            height: 10px;
+            background-color: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #f59e0b;
+            transition: width 0.5s ease-in-out;
+        }
+        .collapsible-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .collapsible-content.open {
+            max-height: 500px;
+            padding-top: 1rem;
+        }
+        .arrow-icon {
+            transition: transform 0.3s ease;
+        }
+        .arrow-icon.open {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="message-box" class="fixed top-4 left-1/2 -translate-x-1/2 bg-gray-800 text-white py-2 px-4 rounded-lg shadow-lg z-50 transition-all duration-300 transform scale-0 opacity-0">
+        <span id="message-text"></span>
+    </div>
+
+    <div class="container py-8">
+        <h1 class="text-4xl font-extrabold text-center mb-8 text-gray-800">Bike Setup Pro</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="card lg:col-span-2">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">Tus Bicicletas</h2>
+                <div id="bike-list" class="space-y-4"></div>
+            </div>
+            
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">Calculadora de Presión</h2>
+                <div class="space-y-4">
+                    <div class="input-group">
+                        <label>Peso del ciclista (kg)</label>
+                        <input type="number" id="rider-weight" placeholder="Ej: 75" min="1" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Tipo de bicicleta</label>
+                        <select id="bike-type" class="rounded-lg">
+                            <option value="mtb">Mountain Bike</option>
+                            <option value="road">Ruta</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Ancho del neumático (mm)</label>
+                        <input type="number" id="tire-width" placeholder="Ej: 25" min="1" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Rodado (pulgadas)</label>
+                        <select id="wheel-size" class="rounded-lg">
+                            <option value="26">26"</option>
+                            <option value="27.5">27.5"</option>
+                            <option value="29">29"</option>
+                            <option value="700c">700c</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Terreno</label>
+                        <select id="terrain-type" class="rounded-lg">
+                            <option value="asfalto">Asfalto</option>
+                            <option value="grava">Grava</option>
+                            <option value="sendero">Sendero</option>
+                            <option value="rocas">Rocas</option>
+                        </select>
+                    </div>
+                    <button onclick="calculatePressure()" class="w-full bg-yellow-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-yellow-600 transition-colors">Calcular</button>
+                    <div id="pressure-result" class="text-lg font-bold text-center mt-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="overdue-tasks-section">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Tareas Pendientes</h2>
+            <div id="overdue-tasks-list" class="space-y-4">
+                <p class="text-center text-gray-500">No hay tareas de mantenimiento pendientes.</p>
+            </div>
+        </div>
+
+        <div id="bike-details" class="card hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800" id="bike-name-details"></h2>
+                <div id="overdue-tasks-indicator" class="bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-full shadow-md hidden">
+                    <span id="overdue-count">0</span> Tareas Pendientes
+                </div>
+            </div>
+            
+            <div class="flex border-b border-gray-200 mb-6 -mx-2">
+                <button id="config-tab" class="tab-button active mx-2">Configuración</button>
+                <button id="maintenance-tab" class="tab-button mx-2">Mantenimiento</button>
+                <button id="torques-tab" class="tab-button mx-2">Torques</button>
+            </div>
+
+            <div id="config-section"></div>
+            <div id="maintenance-section" class="hidden"></div>
+            <div id="torques-section" class="hidden"></div>
+
+            <button onclick="saveBikeChanges()" class="w-full mt-6 bg-green-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition-colors">Guardar Cambios</button>
+        </div>
+
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Comparador de Uso</h2>
+            <div id="bike-comparator" class="space-y-4"></div>
+        </div>
+        
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Agregar Nueva Bicicleta</h2>
+            <div class="input-group">
+                <label>Nombre de la bicicleta</label>
+                <input type="text" id="new-bike-name" placeholder="Ej: Mi Bicicleta de Gravel" class="rounded-lg">
+            </div>
+            <button onclick="addNewBike()" class="w-full mt-4 bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors">Agregar Bicicleta</button>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let bikes = {};
+        let selectedBikeId = null;
+
+        // Mantenimiento programado para los componentes de la bicicleta
+        const BIKE_MAINTENANCE_SCHEDULE = {
+            "revisión_general": { horas: 100, km: 2500, descripcion: "Revisión general y lubricación de componentes.", details: "1. Limpiar la bicicleta a fondo. 2. Revisar el estado de tornillos y aprietes. 3. Lubricar la cadena y otros puntos de pivote. 4. Inspeccionar neumáticos y frenos." },
+            "mantenimiento_horquilla": { horas: 25, km: 600, descripcion: "Limpieza y lubricación de las barras de la horquilla.", details: "1. Limpiar las barras de la horquilla con un paño limpio. 2. Aplicar un lubricante específico para suspensiones. 3. Comprimir la horquilla varias veces para que el lubricante penetre en los retenes. 4. Limpiar el exceso de lubricante." },
+            "suspensión_básica": { horas: 50, km: 1200, descripcion: "Limpieza y engrase de retenes y guardapolvos de suspensiones (horquilla y amortiguador).", details: "1. Limpiar cuidadosamente alrededor de los retenes y guardapolvos. 2. Levantar los retenes con una herramienta no abrasiva. 3. Limpiar y reengrasar el interior de los retenes. 4. Volver a colocar los retenes en su lugar." },
+            "suspensión_avanzada": { horas: 200, km: 5000, descripcion: "Servicio completo que incluye cambio de aceite, retenes, guardapolvos y revisión de casquillos de horquilla y amortiguador.", details: "1. Desmontar la horquilla y el amortiguador de la bicicleta. 2. Drenar el aceite viejo. 3. Limpiar y reemplazar los retenes y guardapolvos. 4. Rellenar con aceite nuevo según las especificaciones del fabricante. 5. Montar de nuevo la horquilla y el amortiguador y ajustar la presión de aire." },
+            "caja_pedalera": { horas: 100, km: 2500, descripcion: "Revisión y engrase de caja pedalera.", details: "1. Desmontar la caja pedalera del cuadro. 2. Limpiar la suciedad acumulada en las roscas y la caja. 3. Limpiar y engrasar los rodamientos. 4. Volver a montar la caja pedalera aplicando grasa." },
+            "juego_direccion": { horas: 100, km: 2500, descripcion: "Revisión y engrase de juego de dirección.", details: "1. Desmontar la potencia y el manillar. 2. Quitar las tapas y los rodamientos. 3. Limpiar y engrasar los rodamientos y las pistas de rodadura. 4. Volver a montar el juego de dirección y ajustar el apriete." },
+            "rulemanes_ruedas": { horas: 100, km: 2500, descripcion: "Engrasar y limpiar rulemanes de las ruedas.", details: "1. Desmontar las ruedas de la bicicleta. 2. Quitar los rodamientos de los bujes. 3. Limpiar los rodamientos y el interior del buje. 4. Reengrasar los rodamientos y volver a montarlos." },
+            "revisión_frenos": { horas: 75, km: 1800, descripcion: "Inspección de pastillas y discos de freno.", details: "1. Inspeccionar el grosor de las pastillas de freno. Reemplazarlas si es necesario. 2. Limpiar los discos de freno con un limpiador específico. 3. Revisar el apriete de los tornillos del disco." },
+            "cambio_liquido_frenos": { meses: 12, descripcion: "Reemplazo del líquido de frenos para evitar la pérdida de potencia de frenado.", details: "1. Purgar el sistema de frenos utilizando un kit de purgado. 2. Drenar el líquido de frenos viejo. 3. Rellenar con líquido de frenos nuevo según las especificaciones. 4. Asegurarse de que no haya burbujas de aire en el sistema." },
+            "cables_fundas": { horas: 150, km: 3500, descripcion: "Revisión y reemplazo de cables y fundas de cambio y freno.", details: "1. Inspeccionar visualmente el estado de los cables y fundas. 2. Reemplazar si se ven deshilachados o corroídos. 3. Lubricar el interior de las fundas antes de insertar los cables nuevos." },
+            "cadena_piñon": { horas: 25, km: 600, descripcion: "Limpieza y lubricación de cadena y piñón.", details: "1. Limpiar la cadena y el piñón con un desengrasante y un cepillo. 2. Enjuagar y secar completamente. 3. Aplicar una gota de lubricante en cada eslabón de la cadena. 4. Limpiar el exceso de lubricante con un paño seco." },
+            "pedales": { horas: 50, km: 1200, descripcion: "Revisión y engrase de pedales.", details: "1. Desmontar los pedales de las bielas. 2. Limpiar y engrasar las roscas de las bielas. 3. En algunos pedales, es posible reengrasar el eje interno." },
+            "tubeless": { horas: 0, km: 0, descripcion: "Revisión y recarga de líquido tubeless.", details: "1. Quitar la válvula de la rueda y drenar el líquido viejo. 2. Limpiar el interior del neumático. 3. Rellenar con la cantidad de líquido tubeless recomendada por el fabricante. 4. Volver a inflar el neumático a la presión deseada." }
+        };
+
+        const BIKE_DEFAULTS = {
+            horas: 0,
+            km: 0,
+            config: {},
+            torques: {},
+            // Inicializar maintenance copiando los valores del schedule
+            maintenance: Object.keys(BIKE_MAINTENANCE_SCHEDULE).reduce((acc, key) => {
+                acc[key] = {
+                    lastService: { horas: 0, km: 0, date: null },
+                    history: [],
+                    recommended: { ...BIKE_MAINTENANCE_SCHEDULE[key] }
+                };
+                return acc;
+            }, {}),
+            customMaintenance: []
+        };
+        
+        // --- Data Management (using localStorage) ---
+        function loadBikes() {
+            const storedBikes = localStorage.getItem('bikes');
+            if (storedBikes) {
+                bikes = JSON.parse(storedBikes);
+            } else {
+                bikes = {
+                    'scott-scale-rc-900': { id: 'scott-scale-rc-900', name: 'Scott Scale RC 900 WC', ...BIKE_DEFAULTS },
+                    'scott-scale-930': { id: 'scott-scale-930', name: 'Scott Scale 930', ...BIKE_DEFAULTS },
+                    'venzo-ruta': { id: 'venzo-ruta', name: 'Venzo de Ruta', ...BIKE_DEFAULTS },
+                };
+                saveBikes();
+            }
+        }
+
+        function saveBikes() {
+            localStorage.setItem('bikes', JSON.stringify(bikes));
+            renderBikeList();
+            renderBikeComparator();
+            renderOverdueTasks();
+            if(selectedBikeId) {
+                checkOverdueTasks();
+                renderMaintenanceTab(bikes[selectedBikeId]);
+            }
+        }
+
+        // --- UI Rendering Functions ---
+        function renderBikeList() {
+            const bikeListContainer = document.getElementById('bike-list');
+            bikeListContainer.innerHTML = '';
+            if (Object.keys(bikes).length === 0) {
+                bikeListContainer.innerHTML = `<p class="text-center text-gray-500">No hay bicicletas. ¡Agrega una!</p>`;
+                return;
+            }
+            Object.keys(bikes).forEach(bikeId => {
+                const bike = bikes[bikeId];
+                const bikeElement = document.createElement('div');
+                bikeElement.id = `bike-${bikeId}`;
+                bikeElement.className = `bike-card p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors flex justify-between items-center ${selectedBikeId === bikeId ? 'selected' : ''}`;
+                bikeElement.innerHTML = `
+                    <div class="flex-grow">
+                        <h3 class="text-xl font-bold">${bike.name}</h3>
+                        <p class="text-sm text-gray-500">Horas: ${bike.horas || 0}h | Km: ${bike.km || 0}km</p>
+                    </div>
+                `;
+                bikeElement.onclick = () => {
+                    const previouslySelected = document.querySelector('.bike-card.selected');
+                    if (previouslySelected) {
+                        previouslySelected.classList.remove('selected');
+                    }
+                    bikeElement.classList.add('selected');
+                    selectBike(bikeId);
+                };
+                bikeListContainer.appendChild(bikeElement);
+            });
+        }
+        
+        function selectBike(bikeId) {
+            selectedBikeId = bikeId;
+            const bike = bikes[bikeId];
+            document.getElementById('bike-details').classList.remove('hidden');
+            document.getElementById('bike-name-details').textContent = bike.name;
+            
+            checkOverdueTasks();
+            renderConfigTab(bike);
+            renderMaintenanceTab(bike);
+            renderTorquesTab(bike);
+            showTab('config');
+        }
+
+        function renderConfigTab(bike) {
+            document.getElementById('config-section').innerHTML = `
+                <div class="space-y-6">
+                    <h3 class="text-xl font-bold mb-2">Detalles Generales</h3>
+                    <div class="input-group">
+                        <label>Peso de la bicicleta (kg)</label>
+                        <input type="number" id="bike-weight" value="${bike.config.bikeWeight || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Material del cuadro</label>
+                        <input type="text" id="frame-material" value="${bike.config.frameMaterial || ''}" placeholder="Ej: Carbono" class="rounded-lg">
+                    </div>
+
+                    <h3 class="text-xl font-bold mb-2 mt-6">Ajustes de Suspensión</h3>
+                    <div class="input-group">
+                        <label>Recorrido suspensión delantera (mm)</label>
+                        <input type="number" id="front-suspension" value="${bike.config.frontSuspension || ''}" placeholder="Ej: 100" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Recorrido suspensión trasera (mm)</label>
+                        <input type="number" id="rear-suspension" value="${bike.config.rearSuspension || ''}" placeholder="Ej: 100" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>SAG de Horquilla (%)</label>
+                        <input type="number" id="sag-fork" value="${bike.config.sagFork || ''}" placeholder="Ej: 20" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>SAG de Amortiguador (%)</label>
+                        <input type="number" id="sag-shock" value="${bike.config.sagShock || ''}" placeholder="Ej: 25" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Presión de aire Horquilla (PSI)</label>
+                        <input type="number" id="fork-air-pressure" value="${bike.config.forkAirPressure || ''}" placeholder="Ej: 90" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Presión de aire Amortiguador (PSI)</label>
+                        <input type="number" id="shock-air-pressure" value="${bike.config.shockAirPressure || ''}" placeholder="Ej: 150" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Ajuste de Rebote Horquilla</label>
+                        <input type="text" id="fork-rebound" value="${bike.config.forkRebound || ''}" placeholder="Ej: 3 clicks" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Ajuste de Compresión Horquilla</label>
+                        <input type="text" id="fork-compression" value="${bike.config.forkCompression || ''}" placeholder="Ej: 2 clicks" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Ajuste de Rebote Amortiguador</label>
+                        <input type="text" id="shock-rebound" value="${bike.config.shockRebound || ''}" placeholder="Ej: 5 clicks" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Ajuste de Compresión Amortiguador</label>
+                        <input type="text" id="shock-compression" value="${bike.config.shockCompression || ''}" placeholder="Ej: 3 clicks" class="rounded-lg">
+                    </div>
+
+                    <h3 class="text-xl font-bold mb-2 mt-6">Medidas de Posición</h3>
+                    <div class="input-group">
+                        <label>Altura del Asiento (cm)</label>
+                        <input type="number" id="seat-height" value="${bike.config.seatHeight || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Avance del Asiento (mm)</label>
+                        <input type="number" id="seat-setback" value="${bike.config.seatSetback || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Ángulo del Sillín (grados)</label>
+                        <input type="number" id="seat-angle" value="${bike.config.seatAngle || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Distancia Sillín a Manillar (mm)</label>
+                        <input type="number" id="seat-to-handlebar-reach" value="${bike.config.seatToHandlebarReach || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Ancho del Manillar (mm)</label>
+                        <input type="number" id="handlebar-width" value="${bike.config.handlebarWidth || ''}" class="rounded-lg">
+                    </div>
+
+                    <h3 class="text-xl font-bold mb-2 mt-6">Neumáticos</h3>
+                    <div class="input-group">
+                        <label>Presión Neumático Delantero (PSI)</label>
+                        <input type="number" id="tire-pressure-front" value="${bike.config.tirePressureFront || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Presión Neumático Trasero (PSI)</label>
+                        <input type="number" id="tire-pressure-rear" value="${bike.config['tire-pressure-rear'] || ''}" class="rounded-lg">
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderMaintenanceTab(bike) {
+            const container = document.getElementById('maintenance-section');
+            container.innerHTML = `
+                <div class="p-6 bg-gray-50 rounded-xl mb-6 shadow-sm">
+                    <h3 class="text-xl font-bold mb-2">Uso Total de la Bicicleta</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label>Horas de uso totales</label>
+                            <input type="number" id="total-horas" value="${bike.horas || 0}" class="rounded-lg">
+                        </div>
+                        <div class="input-group">
+                            <label>Kilómetros totales</label>
+                            <input type="number" id="total-km" value="${bike.km || 0}" class="rounded-lg">
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <h4 class="font-bold text-lg">Mantenimiento Estándar</h4>
+                    ${Object.keys(BIKE_MAINTENANCE_SCHEDULE).map(key => {
+                        const maintenance = bike.maintenance[key].recommended;
+                        const details = BIKE_MAINTENANCE_SCHEDULE[key].details;
+                        const lastService = bike.maintenance[key]?.lastService || { horas: 0, km: 0, date: null };
+                        const history = bike.maintenance[key]?.history || [];
+                        
+                        let isDue = false;
+                        let usageString = '';
+                        let hoursSince = 0;
+                        let kmSince = 0;
+                        let monthsSince = 0;
+                        let maxHours = maintenance.horas || 1;
+                        let maxKm = maintenance.km || 1;
+                        
+                        if (maintenance.horas) {
+                            hoursSince = (bike.horas || 0) - lastService.horas;
+                            usageString += `${hoursSince.toFixed(0)}h`;
+                            if (hoursSince >= maintenance.horas) isDue = true;
+                        }
+                        if (maintenance.km) {
+                            kmSince = (bike.km || 0) - lastService.km;
+                            usageString += (usageString ? ' / ' : '') + `${kmSince.toFixed(0)}km`;
+                            if (kmSince >= maintenance.km) isDue = true;
+                        }
+                        if (maintenance.meses) {
+                            const now = new Date();
+                            const lastServiceDate = lastService.date ? new Date(lastService.date) : new Date(0);
+                            monthsSince = (now.getFullYear() - lastServiceDate.getFullYear()) * 12 + (now.getMonth() - lastServiceDate.getMonth());
+                            usageString += (usageString ? ' / ' : '') + `${monthsSince} meses`;
+                            if (monthsSince >= maintenance.meses) isDue = true;
+                        }
+
+                        const progress = Math.min(100, Math.max(0, (hoursSince / maxHours) * 100));
+
+                        return `
+                            <div class="p-6 rounded-xl shadow-md maintenance-item ${isDue ? 'due' : 'ok'}">
+                                <h4 class="font-bold text-lg">${key.replace(/_/g, ' ').toUpperCase()}</h4>
+                                <p class="text-sm text-gray-600">${maintenance.descripcion}</p>
+                                <div class="mt-4">
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar" style="width: ${progress}%;"></div>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1">${progress.toFixed(0)}% del ciclo completado</p>
+                                </div>
+                                <div class="mt-4 space-y-2">
+                                    <div class="flex items-center space-x-2">
+                                        <label class="font-medium text-sm w-32">Recomendado (Horas):</label>
+                                        <input type="number" id="rec-horas-${key}" value="${maintenance.horas || ''}" class="w-full p-2 border rounded-md text-sm" placeholder="horas" />
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <label class="font-medium text-sm w-32">Recomendado (Km):</label>
+                                        <input type="number" id="rec-km-${key}" value="${maintenance.km || ''}" class="w-full p-2 border rounded-md text-sm" placeholder="km" />
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <label class="font-medium text-sm w-32">Recomendado (Meses):</label>
+                                        <input type="number" id="rec-meses-${key}" value="${maintenance.meses || ''}" class="w-full p-2 border rounded-md text-sm" placeholder="meses" />
+                                    </div>
+                                </div>
+                                <p class="text-sm mt-2 font-semibold">Uso desde el último servicio: ${usageString}</p>
+                                <div class="mt-4 flex space-x-2">
+                                    <button onclick="logMaintenance('${key}')" class="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg text-sm hover:bg-green-600 transition-colors">Servicio Hecho</button>
+                                </div>
+                                <div class="collapsible-header" onclick="toggleDetails(this)">
+                                    <span class="font-bold text-sm text-blue-600">Ver detalles del mantenimiento</span>
+                                    <svg class="arrow-icon w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                                <div class="collapsible-content">
+                                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                                        ${details.split('. ').map(item => `<li>${item.trim()}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                ${history.length > 0 ? `
+                                <div class="history-list mt-4 pt-4 border-t border-gray-200">
+                                    <h5 class="text-sm font-bold mb-1">Historial de Servicios:</h5>
+                                    <ul class="text-xs text-gray-700 space-y-1">
+                                        ${history.slice().reverse().map(record => `
+                                            <li>- ${new Date(record.date).toLocaleDateString()} a las ${record.horas.toFixed(0)}h / ${record.km.toFixed(0)}km</li>
+                                        `).join('')}
+                                    </ul>
+                                </div>` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                    <h4 class="font-bold text-lg mt-8">Mantenimiento Personalizado</h4>
+                    <p class="text-sm text-gray-600 mb-4">Define tus propios ciclos de mantenimiento o ajusta los recomendados para adaptarlos a tu estilo de ciclismo.</p>
+                    ${(bike.customMaintenance || []).map((task, index) => {
+                        const lastService = task.lastService || { horas: 0, km: 0, date: null };
+                        const horasDesde = (bike.horas || 0) - lastService.horas;
+                        const kmDesde = (bike.km || 0) - lastService.km;
+                        const isDue = (task.horas && horasDesde >= task.horas) || (task.km && kmDesde >= task.km);
+                        return `
+                            <div class="p-6 rounded-xl shadow-md maintenance-item ${isDue ? 'due' : 'ok'}">
+                                <h4 class="font-bold text-lg">${task.name}</h4>
+                                <p class="text-sm text-gray-600">${task.description}</p>
+                                <div class="mt-4 space-y-2">
+                                    <div class="flex items-center space-x-2">
+                                        <label class="font-medium text-sm w-32">Horas:</label>
+                                        <input type="number" id="custom-task-horas-${index}" value="${task.horas || ''}" class="w-full p-2 border rounded-md text-sm" />
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <label class="font-medium text-sm w-32">Kilómetros:</label>
+                                        <input type="number" id="custom-task-km-${index}" value="${task.km || ''}" class="w-full p-2 border rounded-md text-sm" />
+                                    </div>
+                                    <div class="flex-1 input-group">
+                                        <label class="font-medium text-sm">Descripción:</label>
+                                        <textarea id="custom-task-desc-${index}" class="w-full h-24 p-2 border rounded-lg">${task.description}</textarea>
+                                    </div>
+                                </div>
+                                <p class="text-sm mt-2 font-semibold">Uso desde el último servicio: ${horasDesde.toFixed(0)}h / ${kmDesde.toFixed(0)}km</p>
+                                <button onclick="logCustomMaintenance(${index})" class="mt-4 w-full bg-green-500 text-white py-2 px-3 rounded-lg text-sm hover:bg-green-600 transition-colors">Servicio Hecho</button>
+                                ${task.history && task.history.length > 0 ? `
+                                <div class="history-list mt-4 pt-4 border-t border-gray-200">
+                                    <h5 class="text-sm font-bold mb-1">Historial de Servicios:</h5>
+                                    <ul class="text-xs text-gray-700 space-y-1">
+                                        ${task.history.slice().reverse().map(record => `
+                                            <li>- ${new Date(record.date).toLocaleDateString()} a las ${record.horas.toFixed(0)}h / ${record.km.toFixed(0)}km</li>
+                                        `).join('')}
+                                    </ul>
+                                </div>` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div class="space-y-4 mt-8 p-6 bg-gray-50 rounded-xl">
+                    <h4 class="font-bold text-lg">Añadir Nueva Tarea</h4>
+                    <div class="input-group">
+                        <label>Nombre de la tarea</label>
+                        <input type="text" id="new-task-name" placeholder="Ej: Revisión de neumáticos" class="rounded-lg">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label>Horas recomendadas</label>
+                            <input type="number" id="new-task-horas" placeholder="Ej: 50" class="rounded-lg">
+                        </div>
+                        <div class="input-group">
+                            <label>Kilómetros recomendados</label>
+                            <input type="number" id="new-task-km" placeholder="Ej: 1200" class="rounded-lg">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Descripción</label>
+                        <textarea id="new-task-description" placeholder="Ej: Limpiar, revisar desgaste y lubricar." class="w-full h-24 p-2 border rounded-lg"></textarea>
+                    </div>
+                    <button onclick="addCustomTask()" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors">Añadir Tarea</button>
+                </div>
+            `;
+        }
+        
+        function renderTorquesTab(bike) {
+            const torques = bike.torques || {};
+            const dimensions = bike.config.dimensions || {};
+            document.getElementById('torques-section').innerHTML = `
+                <div class="space-y-6">
+                    <h3 class="text-xl font-bold mb-4">Torques de Apriete</h3>
+                    <div class="input-group">
+                        <label>Tornillos de la tija de sillín (Nm)</label>
+                        <input type="text" id="tija-torque" value="${torques.tija || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Abrazadera de la tija de sillín (Nm)</label>
+                        <input type="text" id="seat-clamp-torque" value="${torques.seatClamp || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Potencia (Nm)</label>
+                        <input type="text" id="stem-torque" value="${torques.stem || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Manillar (Nm)</label>
+                        <input type="text" id="handlebar-torque" value="${torques.handlebar || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Frenos (Nm)</label>
+                        <input type="text" id="brake-torque" value="${torques.brake || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Platos (Nm)</label>
+                        <input type="text" id="chainring-torque" value="${torques.chainring || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Bielas (Nm)</label>
+                        <input type="text" id="crank-torque" value="${torques.crank || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Pedales (Nm)</label>
+                        <input type="text" id="pedal-torque" value="${torques.pedal || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Eje de rueda (Nm)</label>
+                        <input type="text" id="wheel-axle-torque" value="${torques.wheelAxle || ''}" class="rounded-lg">
+                    </div>
+                </div>
+
+                <div class="space-y-6 mt-8 pt-6 border-t border-gray-200">
+                    <h3 class="text-xl font-bold mb-4">Medidas de Repuestos</h3>
+                    <div class="input-group">
+                        <label>Rodamientos rueda delantera</label>
+                        <input type="text" id="front-wheel-bearings" value="${dimensions.frontWheelBearings || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Rodamientos rueda trasera</label>
+                        <input type="text" id="rear-wheel-bearings" value="${dimensions.rearWheelBearings || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Tipo de caja de pedalier</label>
+                        <input type="text" id="bb-type" value="${dimensions.bbType || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Rodamientos caja de pedalier</label>
+                        <input type="text" id="bb-bearings" value="${dimensions.bbBearings || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Rodamientos del núcleo</label>
+                        <input type="text" id="freehub-bearings" value="${dimensions.freehubBearings || ''}" class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label>Rodamientos de la dirección</label>
+                        <input type="text" id="headset-bearings" value="${dimensions.headsetBearings || ''}" class="rounded-lg">
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBikeComparator() {
+            const comparatorContainer = document.getElementById('bike-comparator');
+            comparatorContainer.innerHTML = '';
+            const allBikes = Object.values(bikes);
+            if (allBikes.length === 0) {
+                comparatorContainer.innerHTML = `<p class="text-center text-gray-500">No hay bicicletas para comparar.</p>`;
+                return;
+            }
+
+            const maxHours = Math.max(...allBikes.map(b => b.horas), 1);
+            const maxKm = Math.max(...allBikes.map(b => b.km), 1);
+
+            allBikes.sort((a, b) => b.horas - a.horas);
+
+            allBikes.forEach(bike => {
+                const hoursPercentage = (bike.horas / maxHours) * 100;
+                const kmPercentage = (bike.km / maxKm) * 100;
+
+                const element = document.createElement('div');
+                element.className = 'p-4 rounded-xl shadow-sm bg-gray-50';
+                element.innerHTML = `
+                    <h3 class="font-bold text-lg">${bike.name}</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-600">Horas: ${bike.horas || 0}h</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${hoursPercentage}%;"></div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-600">Km: ${bike.km || 0}km</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${kmPercentage}%; background-color: #f97316;"></div>
+                        </div>
+                    </div>
+                `;
+                comparatorContainer.appendChild(element);
+            });
+        }
+        
+        function checkOverdueTasks() {
+            if (!selectedBikeId) return;
+            const bike = bikes[selectedBikeId];
+            let totalOverdue = 0;
+            
+            // Standard maintenance
+            Object.keys(BIKE_MAINTENANCE_SCHEDULE).forEach(key => {
+                const recommended = bike.maintenance[key].recommended;
+                const lastService = bike.maintenance[key]?.lastService || { horas: 0, km: 0, date: null };
+                
+                let isDue = false;
+                if (recommended.horas && (bike.horas - lastService.horas) >= recommended.horas) isDue = true;
+                if (recommended.km && (bike.km - lastService.km) >= recommended.km) isDue = true;
+                if (recommended.meses) {
+                    const now = new Date();
+                    const lastServiceDate = lastService.date ? new Date(lastService.date) : new Date(0);
+                    const monthsSince = (now.getFullYear() - lastServiceDate.getFullYear()) * 12 + (now.getMonth() - lastServiceDate.getMonth());
+                    if (monthsSince >= recommended.meses) isDue = true;
+                }
+                if (isDue) totalOverdue++;
+            });
+
+            // Custom maintenance
+            (bike.customMaintenance || []).forEach(task => {
+                const lastService = task.lastService || { horas: 0, km: 0, date: null };
+                const horasDesde = (bike.horas || 0) - lastService.horas;
+                const kmDesde = (bike.km || 0) - lastService.km;
+                if ((task.horas && horasDesde >= task.horas) || (task.km && kmDesde >= task.km)) {
+                    totalOverdue++;
+                }
+            });
+
+            const indicator = document.getElementById('overdue-tasks-indicator');
+            const counter = document.getElementById('overdue-count');
+            
+            if (totalOverdue > 0) {
+                counter.textContent = totalOverdue;
+                indicator.classList.remove('hidden');
+            } else {
+                indicator.classList.add('hidden');
+            }
+        }
+        
+        function renderOverdueTasks() {
+            const container = document.getElementById('overdue-tasks-list');
+            container.innerHTML = '';
+            let overdueCount = 0;
+
+            Object.values(bikes).forEach(bike => {
+                // Standard maintenance
+                Object.keys(BIKE_MAINTENANCE_SCHEDULE).forEach(key => {
+                    const recommended = bike.maintenance[key].recommended;
+                    const lastService = bike.maintenance[key]?.lastService || { horas: 0, km: 0, date: null };
+                    
+                    let isDue = false;
+                    let usageString = '';
+                    
+                    if (recommended.horas) {
+                        const hoursSince = (bike.horas || 0) - lastService.horas;
+                        usageString += `${hoursSince.toFixed(0)}h / ${recommended.horas}h`;
+                        if (hoursSince >= recommended.horas) isDue = true;
+                    }
+                    if (recommended.km) {
+                        const kmSince = (bike.km || 0) - lastService.km;
+                        usageString += (usageString ? ' | ' : '') + `${kmSince.toFixed(0)}km / ${recommended.km}km`;
+                        if (kmSince >= recommended.km) isDue = true;
+                    }
+                    if (recommended.meses) {
+                        const now = new Date();
+                        const lastServiceDate = lastService.date ? new Date(lastService.date) : new Date(0);
+                        const monthsSince = (now.getFullYear() - lastServiceDate.getFullYear()) * 12 + (now.getMonth() - lastServiceDate.getMonth());
+                        usageString += (usageString ? ' | ' : '') + `${monthsSince} meses / ${recommended.meses} meses`;
+                        if (monthsSince >= recommended.meses) isDue = true;
+                    }
+
+                    if (isDue) {
+                        overdueCount++;
+                        const taskElement = document.createElement('div');
+                        taskElement.className = 'p-4 rounded-xl shadow-sm bg-red-100 border-l-4 border-red-500';
+                        taskElement.innerHTML = `
+                            <p class="font-semibold text-gray-800">
+                                <span class="text-red-600 font-bold">${key.replace(/_/g, ' ').toUpperCase()}</span> en **${bike.name}**
+                            </p>
+                            <p class="text-sm text-gray-600 mt-1">Uso: ${usageString}</p>
+                        `;
+                        container.appendChild(taskElement);
+                    }
+                });
+            });
+
+            if (overdueCount === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500">No hay tareas de mantenimiento pendientes.</p>`;
+            }
+        }
+
+        // --- Event Handlers ---
+        window.saveBikeChanges = () => {
+            if (!selectedBikeId) return;
+            const bike = bikes[selectedBikeId];
+            
+            const totalHorasInput = document.getElementById('total-horas');
+            const totalKmInput = document.getElementById('total-km');
+            
+            bike.horas = parseFloat(totalHorasInput.value) || 0;
+            bike.km = parseFloat(totalKmInput.value) || 0;
+            
+            // Guardar valores editables de mantenimiento estándar
+            Object.keys(BIKE_MAINTENANCE_SCHEDULE).forEach(key => {
+                const horasInput = document.getElementById(`rec-horas-${key}`);
+                const kmInput = document.getElementById(`rec-km-${key}`);
+                const mesesInput = document.getElementById(`rec-meses-${key}`);
+
+                if (horasInput) bike.maintenance[key].recommended.horas = parseFloat(horasInput.value) || 0;
+                if (kmInput) bike.maintenance[key].recommended.km = parseFloat(kmInput.value) || 0;
+                if (mesesInput) bike.maintenance[key].recommended.meses = parseFloat(mesesInput.value) || 0;
+            });
+
+            // Guardar valores editables de mantenimiento personalizado
+            const customTasks = document.querySelectorAll('[id^="custom-task-horas-"]');
+            customTasks.forEach(input => {
+                const index = input.id.split('-').pop();
+                const horas = parseFloat(document.getElementById(`custom-task-horas-${index}`).value) || 0;
+                const km = parseFloat(document.getElementById(`custom-task-km-${index}`).value) || 0;
+                const description = document.getElementById(`custom-task-desc-${index}`).value || '';
+
+                if (bikes[selectedBikeId].customMaintenance[index]) {
+                    bikes[selectedBikeId].customMaintenance[index].horas = horas;
+                    bikes[selectedBikeId].customMaintenance[index].km = km;
+                    bikes[selectedBikeId].customMaintenance[index].description = description;
+                }
+            });
+
+            const updatedBike = {
+                ...bike,
+                config: {
+                    ...bike.config,
+                    bikeWeight: parseFloat(document.getElementById('bike-weight').value) || '',
+                    frameMaterial: document.getElementById('frame-material').value || '',
+                    frontSuspension: parseFloat(document.getElementById('front-suspension').value) || '',
+                    rearSuspension: parseFloat(document.getElementById('rear-suspension').value) || '',
+                    sagFork: parseFloat(document.getElementById('sag-fork').value) || '',
+                    sagShock: parseFloat(document.getElementById('sag-shock').value) || '',
+                    forkAirPressure: parseFloat(document.getElementById('fork-air-pressure').value) || '',
+                    shockAirPressure: parseFloat(document.getElementById('shock-air-pressure').value) || '',
+                    forkRebound: document.getElementById('fork-rebound').value || '',
+                    forkCompression: document.getElementById('fork-compression').value || '',
+                    shockRebound: document.getElementById('shock-rebound').value || '',
+                    shockCompression: document.getElementById('shock-compression').value || '',
+                    seatHeight: parseFloat(document.getElementById('seat-height').value) || '',
+                    seatSetback: parseFloat(document.getElementById('seat-setback').value) || '',
+                    seatAngle: parseFloat(document.getElementById('seat-angle').value) || '',
+                    seatToHandlebarReach: parseFloat(document.getElementById('seat-to-handlebar-reach').value) || '',
+                    handlebarWidth: parseFloat(document.getElementById('handlebar-width').value) || '',
+                    tirePressureFront: parseFloat(document.getElementById('tire-pressure-front').value) || '',
+                    tirePressureRear: parseFloat(document.getElementById('tire-pressure-rear').value) || '',
+                    dimensions: {
+                        frontWheelBearings: document.getElementById('front-wheel-bearings').value || '',
+                        rearWheelBearings: document.getElementById('rear-wheel-bearings').value || '',
+                        bbType: document.getElementById('bb-type').value || '',
+                        bbBearings: document.getElementById('bb-bearings').value || '',
+                        freehubBearings: document.getElementById('freehub-bearings').value || '',
+                        headsetBearings: document.getElementById('headset-bearings').value || ''
+                    }
+                },
+                torques: {
+                    tija: document.getElementById('tija-torque').value || '',
+                    seatClamp: document.getElementById('seat-clamp-torque').value || '',
+                    stem: document.getElementById('stem-torque').value || '',
+                    handlebar: document.getElementById('handlebar-torque').value || '',
+                    brake: document.getElementById('brake-torque').value || '',
+                    chainring: document.getElementById('chainring-torque').value || '',
+                    crank: document.getElementById('crank-torque').value || '',
+                    pedal: document.getElementById('pedal-torque').value || '',
+                    wheelAxle: document.getElementById('wheel-axle-torque').value || ''
+                }
+            };
+            
+            bikes[selectedBikeId] = updatedBike;
+            saveBikes();
+            showMessage("Cambios guardados con éxito.");
+        };
+        
+        window.logMaintenance = (task) => {
+            if (!selectedBikeId) return;
+            const bike = bikes[selectedBikeId];
+            const newRecord = {
+                horas: bike.horas,
+                km: bike.km,
+                date: new Date().toISOString()
+            };
+            
+            bikes[selectedBikeId].maintenance[task].history.push(newRecord);
+            if (bikes[selectedBikeId].maintenance[task].history.length > 4) {
+                bikes[selectedBikeId].maintenance[task].history.shift();
+            }
+
+            bikes[selectedBikeId].maintenance[task].lastService = newRecord;
+            saveBikes();
+            renderMaintenanceTab(bikes[selectedBikeId]);
+            showMessage(`Servicio de ${task.replace(/_/g, ' ').toUpperCase()} registrado.`);
+        };
+        
+        window.logCustomMaintenance = (index) => {
+            if (!selectedBikeId) return;
+            const bike = bikes[selectedBikeId];
+            const newRecord = {
+                horas: bike.horas,
+                km: bike.km,
+                date: new Date().toISOString()
+            };
+
+            bikes[selectedBikeId].customMaintenance = bikes[selectedBikeId].customMaintenance || [];
+            if (!bikes[selectedBikeId].customMaintenance[index].history) {
+                bikes[selectedBikeId].customMaintenance[index].history = [];
+            }
+            bikes[selectedBikeId].customMaintenance[index].history.push(newRecord);
+            if (bikes[selectedBikeId].customMaintenance[index].history.length > 4) {
+                bikes[selectedBikeId].customMaintenance[index].history.shift();
+            }
+
+            bikes[selectedBikeId].customMaintenance[index].lastService = newRecord;
+            saveBikes();
+            renderMaintenanceTab(bikes[selectedBikeId]);
+            showMessage(`Servicio de ${bikes[selectedBikeId].customMaintenance[index].name} registrado.`);
+        };
+
+        window.addNewBike = () => {
+            const name = document.getElementById('new-bike-name').value;
+            if (!name) {
+                showMessage("Por favor, ingrese un nombre para la bicicleta.", true);
+                return;
+            }
+            const newBikeId = Date.now().toString();
+            bikes[newBikeId] = { id: newBikeId, name, ...JSON.parse(JSON.stringify(BIKE_DEFAULTS)) };
+            saveBikes();
+            document.getElementById('new-bike-name').value = '';
+            showMessage(`Bicicleta "${name}" agregada con éxito.`);
+        };
+        
+        window.calculatePressure = () => {
+            const riderWeight = parseFloat(document.getElementById('rider-weight').value) || 0;
+            const bikeType = document.getElementById('bike-type').value;
+            const tireWidth = parseFloat(document.getElementById('tire-width').value) || 0;
+            const wheelSize = document.getElementById('wheel-size').value;
+            const terrainType = document.getElementById('terrain-type').value;
+            
+            let basePressure = 0;
+            
+            if (bikeType === 'mtb') {
+                basePressure = 15 + (riderWeight * 0.5) + (tireWidth * 0.2);
+                if (wheelSize === '29') basePressure += 5;
+                if (terrainType === 'asfalto') basePressure += 5;
+                if (terrainType === 'rocas') basePressure -= 3;
+            } else {
+                basePressure = 80 + (riderWeight * 0.7) + (tireWidth * 1.5);
+                if (terrainType === 'grava') basePressure -= 10;
+            }
+            
+            document.getElementById('pressure-result').textContent = `Presión recomendada: ${basePressure.toFixed(1)} PSI`;
+        };
+
+        window.addCustomTask = () => {
+            if (!selectedBikeId) return;
+            const name = document.getElementById('new-task-name').value;
+            const horas = parseFloat(document.getElementById('new-task-horas').value) || 0;
+            const km = parseFloat(document.getElementById('new-task-km').value) || 0;
+            const description = document.getElementById('new-task-description').value;
+
+            if (!name) {
+                showMessage("Por favor, ingrese un nombre para la tarea.", true);
+                return;
+            }
+
+            bikes[selectedBikeId].customMaintenance = bikes[selectedBikeId].customMaintenance || [];
+            bikes[selectedBikeId].customMaintenance.push({ 
+                name, 
+                horas, 
+                km, 
+                description, 
+                lastService: { horas: 0, km: 0, date: null },
+                history: []
+            });
+            saveBikes();
+            
+            document.getElementById('new-task-name').value = '';
+            document.getElementById('new-task-horas').value = '';
+            document.getElementById('new-task-km').value = '';
+            document.getElementById('new-task-description').value = '';
+
+            renderMaintenanceTab(bikes[selectedBikeId]);
+            showMessage(`Tarea "${name}" agregada con éxito.`);
+        };
+        
+        window.toggleDetails = (header) => {
+            const content = header.nextElementSibling;
+            const arrow = header.querySelector('.arrow-icon');
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                arrow.classList.remove('open');
+            } else {
+                content.classList.add('open');
+                arrow.classList.add('open');
+            }
+        };
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`${tab}-tab`).classList.add('active');
+            
+            document.getElementById('config-section').classList.add('hidden');
+            document.getElementById('maintenance-section').classList.add('hidden');
+            document.getElementById('torques-section').classList.add('hidden');
+
+            document.getElementById(`${tab}-section`).classList.remove('hidden');
+        }
+
+        document.getElementById('config-tab').onclick = () => { showTab('config'); renderConfigTab(bikes[selectedBikeId]); };
+        document.getElementById('maintenance-tab').onclick = () => { showTab('maintenance'); renderMaintenanceTab(bikes[selectedBikeId]); };
+        document.getElementById('torques-tab').onclick = () => { showTab('torques'); renderTorquesTab(bikes[selectedBikeId]); };
+        
+        function showMessage(message, isError = false) {
+            const messageBox = document.getElementById('message-box');
+            document.getElementById('message-text').textContent = message;
+            messageBox.style.backgroundColor = isError ? '#ef4444' : '#10b981';
+            messageBox.classList.remove('scale-0', 'opacity-0');
+            messageBox.classList.add('scale-100', 'opacity-100');
+            setTimeout(() => {
+                messageBox.classList.remove('scale-100', 'opacity-100');
+                messageBox.classList.add('scale-0', 'opacity-0');
+            }, 3000);
+        }
+
+        window.addEventListener('load', () => {
+            loadBikes();
+            renderBikeList();
+            renderBikeComparator();
+            renderOverdueTasks();
+        });
+    </script>
+</body>
+</html>
